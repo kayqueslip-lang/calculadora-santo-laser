@@ -1,15 +1,4 @@
 <!DOCTYPE html>
-<html lang="en">
-
-  <head>
-    <meta charset="UTF-8">
-    <title>Untitled</title>
-    
-
-  </head>
-    
-  <body>
-  <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -142,13 +131,11 @@
 
         .pay-option {
             background: rgba(255,255,255,0.02); padding: 15px 20px; border-radius: 12px;
-            display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
             color: white;
         }
-        .pay-row { display: flex; justify-content: space-between; width: 100%; align-items: center; }
         .pay-option span { color: #aaa; font-size: 0.9rem; }
         .pay-option b { color: #00e6cb; font-family: 'Orbitron'; }
-        .pay-detail { font-size: 0.75rem; color: #777; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
 
         .btn-action {
             width: 100%; background: #00e6cb; color: black; border: none; padding: 18px;
@@ -219,16 +206,11 @@
             <div class="field"><label>Nº Parcelas</label><input type="number" id="g_parc" value="3" oninput="calc()"></div>
         </div>
 
-        <div class="section-header">📊 Resumo Interno (Lucro)</div>
-        <div class="internal-metrics" style="padding: 20px; border: 1px solid #ddd; background: #f9f9f9; border-radius: 12px;">
-            <div class="metric-line"><span>Custo de Tempo (R$):</span> <b id="out_custo_tempo_global">R$ 0,00</b></div>
-            <div class="metric-line"><span>Custo Design (R$):</span> <b id="out_custo_design_global">R$ 0,00</b></div>
-            <div class="metric-line"><span>Custo Imposto (R$):</span> <b id="out_custo_imposto_global">R$ 0,00</b></div>
-            <div class="metric-line"><span>Custo de Risco (R$):</span> <b id="out_custo_risco_global">R$ 0,00</b></div>
-            <hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;">
-            <div class="metric-line"><span>Custo Total:</span> <b id="out_custo_total">R$ 0,00</b></div>
-            <div class="metric-line"><span>Tempo Produção:</span> <b id="out_tempo_total">0h 30m</b></div>
-            <div class="metric-line" style="margin-top: 10px;"><span>Lucro Real Estimado:</span> <b id="out_lucro_total" style="color:#2e7d32; font-size: 1.2rem;">R$ 0,00</b></div>
+        <div class="section-header">📊 Resumo Interno (Consolidado)</div>
+        <div class="internal-metrics">
+            <div class="metric-line"><span>Tempo Total Produção:</span> <b id="out_tempo_total">0h 00m</b></div>
+            <div class="metric-line"><span>Custo Total Geral:</span> <b id="out_custo_total">R$ 0,00</b></div>
+            <div class="metric-line"><span>Lucro Real Estimado:</span> <b id="out_lucro_total" style="color:var(--success)">R$ 0,00</b></div>
         </div>
     </div>
 
@@ -334,11 +316,6 @@ function calc() {
     let totalMinutosGeral = 0;
     let totalLucroGeral = 0;
 
-    let acumCustoTempo = 0;
-    let acumCustoDesign = 0;
-    let acumCustoImposto = 0;
-    let acumCustoRisco = 0;
-
     const cardBody = document.getElementById('card-body');
     cardBody.innerHTML = '';
 
@@ -349,9 +326,7 @@ function calc() {
         const custoTempo = tempoMin * valorMinuto;
         const custoTotal = custoMat + custoTempo + item.arte;
         const precoVendaTotal = custoTotal / (1 - (item.marg/100) - impGlobal - riscoGlobal);
-        const impostoValor = precoVendaTotal * impGlobal;
-        const riscoValor = precoVendaTotal * riscoGlobal;
-        const lucroItem = precoVendaTotal - custoTotal - impostoValor - riscoValor;
+        const lucroItem = precoVendaTotal - custoTotal - (precoVendaTotal * (impGlobal + riscoGlobal));
         
         const markup = custoTotal > 0 ? (precoVendaTotal / custoTotal) : 0;
         let mkColor = 'var(--danger)';
@@ -362,11 +337,6 @@ function calc() {
         totalCustoGeral += custoTotal;
         totalMinutosGeral += tempoMin;
         totalLucroGeral += lucroItem;
-
-        acumCustoTempo += custoTempo;
-        acumCustoDesign += item.arte;
-        acumCustoImposto += impostoValor;
-        acumCustoRisco += riscoValor;
 
         document.getElementById(`metrics-${item.id}`).innerHTML = `
             <div class="metric-line"><span>Custo de Tempo:</span> <b>R$ ${custoTempo.toFixed(2)}</b></div>
@@ -384,12 +354,6 @@ function calc() {
     });
 
     let finalTotal = (totalBrutoItens + freteCliente + freteInsumos) * (1 - descontoPorc);
-    
-    document.getElementById('out_custo_tempo_global').innerText = acumCustoTempo.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-    document.getElementById('out_custo_design_global').innerText = acumCustoDesign.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-    document.getElementById('out_custo_imposto_global').innerText = acumCustoImposto.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-    document.getElementById('out_custo_risco_global').innerText = acumCustoRisco.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-    
     document.getElementById('card_total').innerText = finalTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
     document.getElementById('out_custo_total').innerText = (totalCustoGeral + freteInsumos).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
     document.getElementById('out_lucro_total').innerText = (totalLucroGeral - (totalBrutoItens * descontoPorc)).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
@@ -397,20 +361,25 @@ function calc() {
 
     const ent = parseFloat(document.getElementById('g_ent').value) || 0;
     const nParc = parseInt(document.getElementById('g_parc').value) || 1;
-    const saldoRestante = finalTotal - ent;
-    const vParc = (saldoRestante * Math.pow(1 + taxaAM, nParc)) / nParc;
-    const totalComJuros = (vParc * nParc) + ent;
+    const vParc = ((finalTotal - ent) * Math.pow(1 + taxaAM, nParc)) / nParc;
 
     document.getElementById('payment-details').innerHTML = `
-        <div class="pay-option">
-            <div class="pay-row"><span>Pix (À Vista)</span><b>R$ ${finalTotal.toFixed(2)}</b></div>
-        </div>
-        <div class="pay-option" style="border: 1px solid #00e6cb">
-            <div class="pay-row"><span>Cartão ${nParc}x</span><b>R$ ${vParc.toFixed(2)} /mês</b></div>
-            ${ent > 0 ? `<div class="pay-detail">Entrada: R$ ${ent.toFixed(2)} + Saldo: R$ ${saldoRestante.toFixed(2)}</div>` : ''}
-            <div class="pay-detail">Total a prazo: R$ ${totalComJuros.toFixed(2)}</div>
-        </div>
+        <div class="pay-option"><span>Pix (À Vista)</span><b>R$ ${finalTotal.toFixed(2)}</b></div>
+        <div class="pay-option" style="border: 1px solid #00e6cb"><span>Cartão ${nParc}x</span><b>R$ ${vParc.toFixed(2)} /mês</b></div>
     `;
+}
+
+// NOVA FUNÇÃO: ENVIA DADOS PARA O NOTION VIA GOOGLE SCRIPT
+function enviarParaNotion(dados) {
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbygRmP4QBOlCh4djQ2BbmPPKSbUr0VhKpvkd2-JbXTX5Iod1SlUhC1TzJ837eFRRZlt9A/exec";
+    
+    fetch(scriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    }).then(() => console.log("Dados enviados ao Notion"))
+      .catch(err => console.error("Erro ao enviar:", err));
 }
 
 function copyWA() {
@@ -418,28 +387,28 @@ function copyWA() {
     const total = document.getElementById('card_total').innerText;
     const nParc = document.getElementById('g_parc').value;
     const vParc = document.querySelector('#payment-details .pay-option:last-child b').innerText;
-    
-    const ent = parseFloat(document.getElementById('g_ent').value) || 0;
-    const taxaAM = (parseFloat(document.getElementById('g_cartao').value) || 0) / 100;
-    const totalFinalLimpo = parseFloat(total.replace(/[^\d,]/g, '').replace(',', '.'));
-    const saldoRestante = totalFinalLimpo - ent;
-    const vParcNum = (saldoRestante * Math.pow(1 + taxaAM, nParc)) / nParc;
-    const totalComJuros = (vParcNum * nParc) + ent;
 
-    const lista = items.map(i => `✅ *${i.qtd}x ${i.nome}*`).join('\n');
+    const listaItensTexto = items.map(i => `✅ *${i.qtd}x ${i.nome}*`).join('\n');
+    const listaSimplesNotion = items.map(i => `${i.qtd}x ${i.nome}`).join(', ');
 
+    // 1. Enviar para o Notion automaticamente
+    enviarParaNotion({
+        cliente: nome,
+        total: total,
+        itens: listaSimplesNotion
+    });
+
+    // 2. Montar mensagem do WhatsApp
     let msg = `*⚡ SANTO LASER - PROPOSTA COMERCIAL ⚡*\n`;
     msg += `------------------------------------------\n`;
     msg += `👤 *Cliente:* ${nome}\n`;
     msg += `📅 *Data:* ${new Date().toLocaleDateString('pt-BR')}\n\n`;
-    msg += `📦 *DESCRIÇÃO DOS ITENS:*\n${lista}\n\n`;
+    msg += `📦 *DESCRIÇÃO DOS ITENS:*\n${listaItensTexto}\n\n`;
     msg += `------------------------------------------\n`;
     msg += `💰 *VALOR TOTAL: ${total}*\n\n`;
     msg += `💳 *CONDIÇÕES DE PAGAMENTO:*\n`;
     msg += `• Pix (À vista): *${total}*\n`;
-    msg += `• Cartão: *${nParc}x de ${vParc}*\n`;
-    if(ent > 0) msg += `  (Entrada de R$ ${ent.toFixed(2)} + Saldo financiado)\n`;
-    msg += `  (Total final a prazo: R$ ${totalComJuros.toFixed(2)})\n\n`;
+    msg += `• Cartão: *${nParc}x de ${vParc}*\n\n`;
     msg += `------------------------------------------\n`;
     msg += `📱 *Dúvidas? Fale conosco:* https://wa.me/5548996728584\n\n`;
     msg += `_Fico à disposição!_`;
@@ -450,14 +419,10 @@ function copyWA() {
     temp.select();
     document.execCommand("copy");
     document.body.removeChild(temp);
-    alert("✅ Orçamento copiado!");
+    alert("✅ Orçamento copiado e registrado no Notion!");
 }
 
 render();
 </script>
 </body>
-</html>
-    
-  </body>
-  
 </html>
