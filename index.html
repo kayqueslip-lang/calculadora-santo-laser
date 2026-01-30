@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Untitled</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Santo Laser - Sistema de Gestão e Orçamentos</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
+
+        :root {
+            --neon: #00a896;
+            --danger: #cc0000;
+            --warning: #f57c00;
+            --success: #2e7d32;
+            --dark: #0a0b10;
+            --panel-light: #ffffff;
+            --input-border: #cccccc;
+        }
+
+        body {
+            background: #f0f2f5;
+            color: #333;
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0; padding: 20px; display: flex; justify-content: center;
+        }
+
+        .grid-master {
+            display: grid;
+            grid-template-columns: 550px 1fr;
+            gap: 30px; max-width: 1600px; width: 100%;
+            align-items: start;
+        }
+
+        .sidebar {
+            background: var(--panel-light);
+            border: 1px solid #ddd;
+            padding: 25px; border-radius: 15px;
+            max-height: 92vh; overflow-y: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            color: #000;
+        }
+
+        @media print {
+            .sidebar, .btn-action, .btn-add, .btn-pdf { display: none !important; }
+            body { background: white; padding: 0; }
+            .grid-master { display: block; }
+            .preview-side { position: relative; top: 0; width: 100%; }
+            .card-venda { box-shadow: none; border: 2px solid #000; margin: 0 auto; }
+        }
+
+        .item-config {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 20px; border-radius: 12px; margin-bottom: 25px;
+            position: relative; border-left: 5px solid var(--neon);
+        }
+
+        .btn-remove {
+            position: absolute; right: 10px; top: 10px;
+            background: #fff; border: 1px solid var(--danger);
+            color: var(--danger); border-radius: 4px; cursor: pointer; font-size: 0.7rem; padding: 4px 8px;
+        }
+
+        .section-header {
+            font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: #444;
+            letter-spacing: 1px; border-bottom: 2px solid var(--neon); margin: 15px 0 10px; padding-bottom: 5px;
+            text-transform: uppercase; font-weight: bold;
+        }
+
+        .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .field { display: flex; flex-direction: column; gap: 4px; }
+        
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-wrapper span { position: absolute; font-size: 0.9rem; color: #888; pointer-events: none; }
+        .input-wrapper .prefix { left: 10px; }
+        .input-wrapper .suffix { right: 10px; }
+        .input-wrapper input { width: 100%; box-sizing: border-box; }
+        .input-wrapper input.has-prefix { padding-left: 30px; }
+        .input-wrapper input.has-suffix { padding-right: 25px; }
+
+        label { font-size: 0.7rem; color: #555; font-weight: bold; text-transform: uppercase; }
+        
+        input {
+            background: #ffffff; border: 1px solid var(--input-border); color: #000;
+            padding: 10px 12px; border-radius: 6px; font-family: 'Rajdhani'; font-size: 1.1rem; outline: none;
+        }
+        input:focus { border-color: var(--neon); box-shadow: 0 0 5px rgba(0,168,150,0.2); }
+        input.item-name { width: 85%; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px; border-color: #bbb; color: #000; }
+
+        .internal-metrics {
+            margin-top: 15px; padding: 12px; background: #f0f0f0;
+            border-radius: 8px; font-size: 0.9rem; border: 1px solid #ddd; color: #333;
+        }
+
+        .metric-line { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .metric-line b { color: #000; }
+
+        .mk-badge { 
+            font-family: 'Orbitron'; font-size: 0.8rem; padding: 6px 12px; 
+            border-radius: 6px; color: white; display: inline-block; margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .preview-side { position: sticky; top: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        
+        .card-venda {
+            width: 100%; max-width: 550px; background: #0d0e12;
+            border: 2px solid #00e6cb; border-radius: 30px;
+            padding: 40px; text-align: center; box-shadow: 0 0 50px rgba(0, 230, 203, 0.15);
+            color: white;
+        }
+
+        .brand-logo { 
+            font-family: 'Orbitron', sans-serif; font-size: 2rem; letter-spacing: 6px; 
+            color: #00e6cb; margin-bottom: 30px;
+        }
+
+        .items-table { width: 100%; margin-bottom: 30px; text-align: left; border-collapse: collapse; }
+        .items-table th { font-size: 0.7rem; color: #777; padding-bottom: 10px; border-bottom: 1px solid #222; }
+        .items-table td { padding: 12px 0; border-bottom: 1px solid #1a1a1a; font-size: 1.1rem; color: white; }
+        .items-table .qty-col { color: #00e6cb; font-family: 'Orbitron'; width: 80px; font-weight: bold; }
+
+        .total-box { 
+            background: rgba(0, 230, 203, 0.05); border: 1px solid rgba(0, 230, 203, 0.2); 
+            padding: 25px; border-radius: 20px; margin-bottom: 25px;
+        }
+        .total-val { font-family: 'Orbitron', sans-serif; font-size: 3.2rem; color: #fff; }
+
+        .pay-option {
+            background: rgba(255,255,255,0.02); padding: 15px 20px; border-radius: 12px;
+            display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 8px;
+            color: white;
+        }
+        .pay-row { display: flex; justify-content: space-between; width: 100%; align-items: center; }
+        .pay-option span { color: #aaa; font-size: 0.9rem; }
+        .pay-option b { color: #00e6cb; font-family: 'Orbitron'; }
+        .pay-detail { font-size: 0.75rem; color: #777; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .btn-action {
+            width: 100%; background: #00e6cb; color: black; border: none; padding: 18px;
+            border-radius: 12px; font-family: 'Orbitron'; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        .btn-pdf {
+            width: 100%; background: #333; color: white; border: none; padding: 12px;
+            border-radius: 12px; font-family: 'Orbitron'; font-size: 0.8rem; cursor: pointer; transition: 0.3s;
+        }
+        .btn-add {
+            width: 100%; background: white; color: var(--neon); border: 2px dashed var(--neon); 
+            padding: 15px; border-radius: 12px; font-family: 'Orbitron'; font-weight: bold; cursor: pointer; margin-bottom: 30px;
+        }
+
+        .client-info-display {
+            text-align: left; margin-bottom: 20px; font-family: 'Rajdhani';
+            border-bottom: 1px solid #222; padding-bottom: 10px;
+        }
+        .client-label { color: #00e6cb; font-size: 0.7rem; font-family: 'Orbitron'; text-transform: uppercase; }
+        .client-value { color: #fff; font-size: 1.1rem; }
+        .wa-link { color: #00e6cb; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="grid-master">
+    <div class="sidebar">
+        <h2 style="font-family: 'Orbitron'; font-size: 1.2rem; margin-top: 0;">Painel de Orçamento</h2>
+
+        <div class="section-header">👤 Dados da Proposta</div>
+        <div class="field-grid">
+            <div class="field">
+                <label>Nome do Cliente</label>
+                <input type="text" id="g_cliente" placeholder="Ex: João Silva" oninput="calc()">
+            </div>
+            <div class="field">
+                <label>Data da Proposta</label>
+                <input type="date" id="g_data_proposta" oninput="calc()">
+            </div>
+        </div>
+        
+        <div class="section-header">📦 Itens do Pedido</div>
+        <div id="items-list"></div>
+        <button class="btn-add" onclick="addItem()">+ ADICIONAR NOVO ITEM</button>
+
+        <div class="section-header">⚖️ Taxas e Impostos (%)</div>
+        <div class="field-grid">
+            <div class="field"><label>Imposto (NF/MEI)</label><div class="input-wrapper"><input type="number" id="g_imp" value="6" oninput="calc()" class="has-suffix"><span class="suffix">%</span></div></div>
+            <div class="field"><label>Risco Operacional</label><div class="input-wrapper"><input type="number" id="g_risco" value="10" oninput="calc()" class="has-suffix"><span class="suffix">%</span></div></div>
+        </div>
+
+        <div class="section-header">🛠️ Custos Operacionais</div>
+        <div class="field-grid">
+            <div class="field"><label>Valor da Hora (R$)</label><div class="input-wrapper"><span class="prefix">R$</span><input type="number" id="g_hora" value="120" oninput="calc()" class="has-prefix"></div></div>
+            <div class="field"><label>Taxa Cartão AM %</label><div class="input-wrapper"><input type="number" id="g_cartao" value="1" oninput="calc()" class="has-suffix"><span class="suffix">%</span></div></div>
+        </div>
+        <div class="field"><label>Custo Operacional / Insumos</label><div class="input-wrapper"><span class="prefix">R$</span><input type="number" id="g_frete" value="0" oninput="calc()" class="has-prefix"></div></div>
+
+        <div class="section-header">🚚 Logística e Fidelidade</div>
+        <div class="field-grid">
+            <div class="field"><label>Frete p/ Cliente (R$)</label><div class="input-wrapper"><span class="prefix">R$</span><input type="number" id="g_frete_cliente" value="0" oninput="calc()" class="has-prefix"></div></div>
+            <div class="field"><label>Desconto (%)</label><div class="input-wrapper"><input type="number" id="g_desconto" value="0" oninput="calc()" class="has-suffix"><span class="suffix">%</span></div></div>
+        </div>
+
+        <div class="section-header">💳 Pagamento e Parcelas</div>
+        <div class="field-grid">
+            <div class="field"><label>Entrada (R$)</label><div class="input-wrapper"><span class="prefix">R$</span><input type="number" id="g_ent" value="0" oninput="calc()" class="has-prefix"></div></div>
+            <div class="field"><label>Nº Parcelas</label><input type="number" id="g_parc" value="3" oninput="calc()"></div>
+        </div>
+
+        <div class="section-header">📊 Resumo Interno (Lucro)</div>
+        <div class="internal-metrics" style="padding: 20px; border: 1px solid #ddd; background: #f9f9f9; border-radius: 12px;">
+            <div class="metric-line"><span>Custo de Tempo (R$):</span> <b id="out_custo_tempo_global">R$ 0,00</b></div>
+            <div class="metric-line"><span>Custo Design (R$):</span> <b id="out_custo_design_global">R$ 0,00</b></div>
+            <div class="metric-line"><span>Custo Imposto (R$):</span> <b id="out_custo_imposto_global">R$ 0,00</b></div>
+            <div class="metric-line"><span>Custo de Risco (R$):</span> <b id="out_custo_risco_global">R$ 0,00</b></div>
+            <hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;">
+            <div class="metric-line"><span>Custo Total:</span> <b id="out_custo_total">R$ 0,00</b></div>
+            <div class="metric-line"><span>Tempo Produção:</span> <b id="out_tempo_total">0h 30m</b></div>
+            <div class="metric-line" style="margin-top: 10px;"><span>Lucro Real Estimado:</span> <b id="out_lucro_total" style="color:#2e7d32; font-size: 1.2rem;">R$ 0,00</b></div>
+        </div>
+    </div>
+
+    <div class="preview-side">
+        <div class="card-venda" id="printable-card">
+            <div class="brand-logo">SANTO LASER</div>
+            
+            <div class="client-info-display" id="display_cliente_box" style="display: none;">
+                <div class="client-label">Cliente</div>
+                <div class="client-value" id="display_nome_cliente">-</div>
+                <div class="client-label" style="margin-top: 10px;">Data da Proposta</div>
+                <div class="client-value" id="display_data_proposta">-</div>
+            </div>
+
+            <table class="items-table">
+                <thead><tr><th class="qty-col">QTD</th><th>ITEM</th><th style="text-align:right">PREÇO</th></tr></thead>
+                <tbody id="card-body"></tbody>
+            </table>
+            <div class="total-box">
+                <small style="color:#00e6cb; letter-spacing:2px; font-weight: bold;">VALOR TOTAL DO PROJETO</small>
+                <div class="total-val" id="card_total">R$ 0,00</div>
+            </div>
+            <div id="payment-details"></div>
+            
+            <div style="font-size:0.85rem; color:#ffffff; margin-top:20px;">
+                Fale conosco: <a href="https://wa.me/5548996728584" class="wa-link">48 99672-8584</a>
+            </div>
+            <div style="font-size:0.65rem; color:#777; margin-top:10px; font-weight: bold; letter-spacing: 1px;">SANTO LASER - CNPJ: 64.544.332/0001-10</div>
+        </div>
+        <button class="btn-action" onclick="copyWA()">COPIAR PARA WHATSAPP</button>
+        <button class="btn-pdf" onclick="window.print()">BAIXAR PROPOSTA EM PDF</button>
+    </div>
+</div>
+
+<script>
+let items = [{ id: Date.now(), nome: 'Luminária Custom', qtd: 1, mat_preco: 50, mat_rend: 1, arte: 15, setup: 10, grav: 20, marg: 50 }];
+
+function addItem() {
+    items.push({ id: Date.now(), nome: 'Novo Item', qtd: 1, mat_preco: 0, mat_rend: 1, arte: 0, setup: 0, grav: 0, marg: 50 });
+    render();
+}
+
+function removeItem(id) {
+    if(items.length > 1) {
+        items = items.filter(i => i.id !== id);
+        render();
+    }
+}
+
+function updateItem(id, field, val) {
+    const item = items.find(i => i.id === id);
+    item[field] = field === 'nome' ? val : parseFloat(val) || 0;
+    calc();
+}
+
+function render() {
+    const container = document.getElementById('items-list');
+    container.innerHTML = items.map(i => `
+        <div class="item-config">
+            <button class="btn-remove" onclick="removeItem(${i.id})">Remover</button>
+            <input type="text" class="item-name" value="${i.nome}" placeholder="Nome do Produto" oninput="updateItem(${i.id}, 'nome', this.value)">
+            <div class="field-grid">
+                <div class="field"><label>Qtd Peças</label><input type="number" value="${i.qtd}" oninput="updateItem(${i.id}, 'qtd', this.value)"></div>
+                <div class="field"><label>Margem %</label><div class="input-wrapper"><input type="number" value="${i.marg}" oninput="updateItem(${i.id}, 'marg', this.value)" class="has-suffix"><span class="suffix">%</span></div></div>
+            </div>
+            <div class="field-grid">
+                <div class="field"><label>Preço Placa (R$)</label><div class="input-wrapper"><span class="prefix">R$</span><input type="number" value="${i.mat_preco}" oninput="updateItem(${i.id}, 'mat_preco', this.value)" class="has-prefix"></div></div>
+                <div class="field"><label>Peças/Placa</label><input type="number" value="${i.mat_rend}" oninput="updateItem(${i.id}, 'mat_rend', this.value)"></div>
+            </div>
+            <div class="field-grid">
+                <div class="field"><label>Design (R$)</label><input type="number" value="${i.arte}" oninput="updateItem(${i.id}, 'arte', this.value)"></div>
+                <div class="field"><label>Setup (m)</label><input type="number" value="${i.setup}" oninput="updateItem(${i.id}, 'setup', this.value)"></div>
+            </div>
+            <div class="field"><label>Corte/Grav (m)</label><input type="number" value="${i.grav}" oninput="updateItem(${i.id}, 'grav', this.value)"></div>
+            <div class="internal-metrics" id="metrics-${i.id}"></div>
+        </div>
+    `).join('');
+    calc();
+}
+
+function calc() {
+    const nomeCliente = document.getElementById('g_cliente').value;
+    const dataProposta = document.getElementById('g_data_proposta').value;
+    const displayBox = document.getElementById('display_cliente_box');
+    
+    if(nomeCliente || dataProposta) {
+        displayBox.style.display = 'block';
+        document.getElementById('display_nome_cliente').innerText = nomeCliente || 'Não informado';
+        document.getElementById('display_data_proposta').innerText = dataProposta ? dataProposta.split('-').reverse().join('/') : 'Não informada';
+    } else { displayBox.style.display = 'none'; }
+
+    const impGlobal = (parseFloat(document.getElementById('g_imp').value) || 0) / 100;
+    const riscoGlobal = (parseFloat(document.getElementById('g_risco').value) || 0) / 100;
+    const valorHora = parseFloat(document.getElementById('g_hora').value) || 0;
+    const taxaAM = (parseFloat(document.getElementById('g_cartao').value) || 0) / 100;
+    const freteInsumos = parseFloat(document.getElementById('g_frete').value) || 0;
+    const freteCliente = parseFloat(document.getElementById('g_frete_cliente').value) || 0;
+    const descontoPorc = (parseFloat(document.getElementById('g_desconto').value) || 0) / 100;
+    
+    const valorMinuto = valorHora / 60;
+    let totalBrutoItens = 0;
+    let totalCustoGeral = 0;
+    let totalMinutosGeral = 0;
+    let totalLucroGeral = 0;
+
+    let acumCustoTempo = 0;
+    let acumCustoDesign = 0;
+    let acumCustoImposto = 0;
+    let acumCustoRisco = 0;
+
+    const cardBody = document.getElementById('card-body');
+    cardBody.innerHTML = '';
+
+    items.forEach(item => {
+        const placas = Math.ceil(item.qtd / (item.mat_rend || 1));
+        const custoMat = placas * item.mat_preco;
+        const tempoMin = item.setup + (item.grav * item.qtd);
+        const custoTempo = tempoMin * valorMinuto;
+        const custoTotal = custoMat + custoTempo + item.arte;
+        const precoVendaTotal = custoTotal / (1 - (item.marg/100) - impGlobal - riscoGlobal);
+        const impostoValor = precoVendaTotal * impGlobal;
+        const riscoValor = precoVendaTotal * riscoGlobal;
+        const lucroItem = precoVendaTotal - custoTotal - impostoValor - riscoValor;
+        
+        const markup = custoTotal > 0 ? (precoVendaTotal / custoTotal) : 0;
+        let mkColor = 'var(--danger)';
+        if(markup >= 2.5) mkColor = 'var(--success)';
+        else if(markup >= 1.8) mkColor = 'var(--warning)';
+
+        totalBrutoItens += precoVendaTotal;
+        totalCustoGeral += custoTotal;
+        totalMinutosGeral += tempoMin;
+        totalLucroGeral += lucroItem;
+
+        acumCustoTempo += custoTempo;
+        acumCustoDesign += item.arte;
+        acumCustoImposto += impostoValor;
+        acumCustoRisco += riscoValor;
+
+        document.getElementById(`metrics-${item.id}`).innerHTML = `
+            <div class="metric-line"><span>Custo de Tempo:</span> <b>R$ ${custoTempo.toFixed(2)}</b></div>
+            <div class="metric-line"><span>Total Minutos:</span> <b>${tempoMin} min</b></div>
+            <div class="mk-badge" style="background:${mkColor}">MARKUP: ${markup.toFixed(2)}</div>
+        `;
+
+        cardBody.innerHTML += `
+            <tr>
+                <td class="qty-col">${item.qtd}x</td>
+                <td>${item.nome}</td>
+                <td style="text-align:right">R$ ${(precoVendaTotal/item.qtd).toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    let finalTotal = (totalBrutoItens + freteCliente + freteInsumos) * (1 - descontoPorc);
+    
+    document.getElementById('out_custo_tempo_global').innerText = acumCustoTempo.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+    document.getElementById('out_custo_design_global').innerText = acumCustoDesign.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+    document.getElementById('out_custo_imposto_global').innerText = acumCustoImposto.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+    document.getElementById('out_custo_risco_global').innerText = acumCustoRisco.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+    
+    document.getElementById('card_total').innerText = finalTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+    document.getElementById('out_custo_total').innerText = (totalCustoGeral + freteInsumos).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+    document.getElementById('out_lucro_total').innerText = (totalLucroGeral - (totalBrutoItens * descontoPorc)).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+    document.getElementById('out_tempo_total').innerText = `${Math.floor(totalMinutosGeral/60)}h ${totalMinutosGeral%60}m`;
+
+    const ent = parseFloat(document.getElementById('g_ent').value) || 0;
+    const nParc = parseInt(document.getElementById('g_parc').value) || 1;
+    const saldoRestante = finalTotal - ent;
+    const vParc = (saldoRestante * Math.pow(1 + taxaAM, nParc)) / nParc;
+    const totalComJuros = (vParc * nParc) + ent;
+
+    document.getElementById('payment-details').innerHTML = `
+        <div class="pay-option">
+            <div class="pay-row"><span>Pix (À Vista)</span><b>R$ ${finalTotal.toFixed(2)}</b></div>
+        </div>
+        <div class="pay-option" style="border: 1px solid #00e6cb">
+            <div class="pay-row"><span>Cartão ${nParc}x</span><b>R$ ${vParc.toFixed(2)} /mês</b></div>
+            ${ent > 0 ? `<div class="pay-detail">Entrada: R$ ${ent.toFixed(2)} + Saldo: R$ ${saldoRestante.toFixed(2)}</div>` : ''}
+            <div class="pay-detail">Total a prazo: R$ ${totalComJuros.toFixed(2)}</div>
+        </div>
+    `;
+}
+
+function copyWA() {
+    const nome = document.getElementById('g_cliente').value || "Cliente";
+    const total = document.getElementById('card_total').innerText;
+    const nParc = document.getElementById('g_parc').value;
+    const vParc = document.querySelector('#payment-details .pay-option:last-child b').innerText;
+    
+    const ent = parseFloat(document.getElementById('g_ent').value) || 0;
+    const taxaAM = (parseFloat(document.getElementById('g_cartao').value) || 0) / 100;
+    const totalFinalLimpo = parseFloat(total.replace(/[^\d,]/g, '').replace(',', '.'));
+    const saldoRestante = totalFinalLimpo - ent;
+    const vParcNum = (saldoRestante * Math.pow(1 + taxaAM, nParc)) / nParc;
+    const totalComJuros = (vParcNum * nParc) + ent;
+
+    const lista = items.map(i => `✅ *${i.qtd}x ${i.nome}*`).join('\n');
+
+    let msg = `*⚡ SANTO LASER - PROPOSTA COMERCIAL ⚡*\n`;
+    msg += `------------------------------------------\n`;
+    msg += `👤 *Cliente:* ${nome}\n`;
+    msg += `📅 *Data:* ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+    msg += `📦 *DESCRIÇÃO DOS ITENS:*\n${lista}\n\n`;
+    msg += `------------------------------------------\n`;
+    msg += `💰 *VALOR TOTAL: ${total}*\n\n`;
+    msg += `💳 *CONDIÇÕES DE PAGAMENTO:*\n`;
+    msg += `• Pix (À vista): *${total}*\n`;
+    msg += `• Cartão: *${nParc}x de ${vParc}*\n`;
+    if(ent > 0) msg += `  (Entrada de R$ ${ent.toFixed(2)} + Saldo financiado)\n`;
+    msg += `  (Total final a prazo: R$ ${totalComJuros.toFixed(2)})\n\n`;
+    msg += `------------------------------------------\n`;
+    msg += `📱 *Dúvidas? Fale conosco:* https://wa.me/5548996728584\n\n`;
+    msg += `_Fico à disposição!_`;
+
+    const temp = document.createElement("textarea");
+    temp.value = msg;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    alert("✅ Orçamento copiado!");
+}
+
+render();
+</script>
+</body>
+</html>
+    
+  </body>
+  
+</html>
